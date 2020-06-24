@@ -22,6 +22,7 @@ LIBS    =
 
 # (9)ターゲットファイル生成
 $(TARGET): $(OBJS)
+	mkdir -p bin
 	$(CC) -o $@ $^ $(LIBDIR) $(LIBS)
 
 # (10)オブジェクトファイル生成
