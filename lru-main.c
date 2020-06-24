@@ -1,49 +1,36 @@
 /*
-    物理アドレス空間はLRUテーブルとともにある。
+    物理アドレス空間にaccess_timeを定義する。
     Enter keyで1clock進む
+    q + Enterで停止。
 */
 
 #include "lru.h"
-#include <time.h>
+#include "keyboard.h"
 
 int main(void){
     srand((unsigned int)time(NULL));
     initialize();
-    showHDD();
-    show();
-    int i;
-    char data;
-    for(i=1;i<100;i++){
-        printf("%d clock\n",i);
-        switch(rand()%8)
-        {
-            case 0:
-                access('A');
-                break;
-            case 1:
-                access('B');
-                break;
-            case 2:
-                access('C');
-                break;
-            case 3:
-                access('D');
-                break;
-            case 4:
-                access('E');
-                break;
-            case 5:
-                access('F');
-                break;
-            case 6:
-                access('G');
-                break;
-            case 7:
-                access('H');
-                break;
-            default:
-                break;
-        }
-        show();
+    showVM();
+    int i,n;
+    for(i=1;;i++){
+        switch (inputKey())
+		{
+		case Esc:
+			printf("end\n");
+			return 0;
+		case quit:
+			printf("end\n");
+			return 0;
+		default:
+            printf("%d clock\n",i);
+            if((n=rand()%vMemory_SIZE)>=vMemory_SIZE){
+                n=vMemory_SIZE-1;
+                printf("rand error\n");
+            }
+            accessData(virtualMemory[n].data);
+            showPT();
+            showFM();
+            break;
+		}
     }
 }

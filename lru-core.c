@@ -1,30 +1,33 @@
 #include "lru.h"
 
+char weekName[7][4] = {
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"
+};
+
+char Data[vMemory_SIZE]={'A','B','C','D','E','F','G','H'};
+
 void initialize()
 {
-    char data[8]={'A','B','C','D','E','F','G','H'};
     int i=0;
-    for(i=0;i<HDD_SIZE;i++){
-        if(i<8){
-            harddisk[i].data=data[i];
-        }else{
-            break;
-        }
-    }
+    struct timeval now;
+    gettimeofday(&now, NULL);
     for(i=0;i<fMemory_SIZE;i++){
-        LRU[i]=i;
+        figicalMemory[i].access_time=now;
     }
     for(i=0;i<vMemory_SIZE;i++){
         page_table[i].fMemory_number=-1;
-        virtualMemory[i].data=harddisk[i].data;
+        virtualMemory[i].data=Data[i];
     }
 }
 
-void access(char data)
+void accessData(char data)
 {
-    if((data=getHDD(data))=='\0'){
-        printf("Data is not in HDD.\n");
-    }
     int n=getvNum(data);    //アクセスするデータの仮想ページ番号
     if(pagefault(n)==0){    //ページフォルトする
         int fM_number=fMemorycheck();//物理アドレスの空き番号を返す
@@ -36,7 +39,7 @@ void access(char data)
         int InNum=pageIn(fM_number,data);//ページイン
         registTable(n,InNum,fM_number);//ページテーブルに登録
     }else{              //ページフォルトしない
-        sort_LRU(n);     //LRUを並び変える
+        refresh_LRU(n);     //access_timeを最新にする。
     }
 }
 
@@ -63,17 +66,6 @@ int pagefault(int pageNum)
     }
 }
 
-char getHDD(char data)
-{
-    int i;
-    for(i=0;i<HDD_SIZE;i++){
-        if(data==harddisk[i].data){
-            return data;
-        }
-    }
-    return '\0';
-}
-
 int fMemorycheck(){    //空き領域を確認
     int i=0;
     for(i=0;i<fMemory_SIZE;i++){
@@ -93,45 +85,58 @@ int getvMaddr(char data)
             return i;
         }
     }
+    return -1;
 }
 
 int pageOut(int *vMNum)
 {
     printf("pageOut\n");
-    int i=0,j=0;
-    for(i=0;i<HDD_SIZE;i++){
-        if(harddisk[i].data=='\0'){  //HDDの空いてるところ退避
-            for(j=0;j<fMemory_SIZE;j++){
-                //もともと入っていたデータの仮想アドレス
-                if(LRU[j]==fMemory_SIZE-1){//LRU末尾
-                    *vMNum=getvMaddr(figicalMemory[j].data);
-                    break;
-                }
-            }
-            //harddisk[i].data=figicalMemory[j].data;
-            figicalMemory[j].data='\0';
-            return j;
+    int i=0;
+    for(i=0;i<fMemory_SIZE;i++){
+        //もともと入っていたデータの仮想アドレス
+        int pull_number=getOld();   //最古のアクセスのアドレス
+        if(i==pull_number){
+            *vMNum=getvMaddr(figicalMemory[i].data);
+            break;
         }
     }
-    //HDD空いていないのはないと思うが強制終了
-    printf("HDDエラー\n");
-    exit(0);
+    figicalMemory[i].data='\0';
+    figicalMemory[i].access_time.tv_sec=0;
+    figicalMemory[i].access_time.tv_usec=0;
+    return i;
+}
+
+int getOld()
+{
+    int i=0;
+    int pull_number=0;
+    struct timeval t;
+    struct timeval result;
+    gettimeofday(&t, NULL);
+    for(i=0;i<fMemory_SIZE;i++){
+        timersub(&t,&figicalMemory[i].access_time,&result);
+        if(result.tv_sec>0){
+            pull_number=i;
+            t=figicalMemory[i].access_time;
+        }
+    }
+    return pull_number; 
 }
 
 int pageIn(int fMNum,char data)
 {   
     printf("pageIn\n");
     int i=0;
+    struct timeval now;
+    gettimeofday(&now, NULL);
     figicalMemory[fMNum].data=data;
-    for(i=0;i<fMemory_SIZE;i++){
-        LRU[i]+=1;
-    }
-    LRU[fMNum]=0;
+    figicalMemory[fMNum].access_time=now;
     for(i=0;i<vMemory_SIZE;i++){
         if(virtualMemory[i].data==data){
             return i;
         }
     }
+    return -1;
 }
 
 void registTable(int outNum,int inNum,int fM_number)  
@@ -151,42 +156,52 @@ void registTable(int outNum,int inNum,int fM_number)
     }
 }
 
-void sort_LRU(int vMNum)
+void refresh_LRU(int vMNum)
 {
-    int i=0;
-    if(LRU[page_table[vMNum].fMemory_number]==0){
-        return;
-    }
-    for(i=0;i<fMemory_SIZE;i++){
-        if(LRU[page_table[vMNum].fMemory_number]>LRU[i])
-            LRU[i]+=1;
-    }
-    LRU[page_table[vMNum].fMemory_number]=0;
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    figicalMemory[page_table[vMNum].fMemory_number].access_time=now;
 }
 
-void show()
+void showVM()
 {
     int i=0;
-    printf("\n");
+    printf("virtualMemory\n");
     for(i=0;i<vMemory_SIZE;i++){
-        printf("%c,(%d,%d)\n",
-        virtualMemory[i].data,
-        page_table[i].exist_bit,
-        page_table[i].fMemory_number);
-    }
-    printf("\n");
-    for(i=0;i<fMemory_SIZE;i++){
-        printf("%c,LRU=%d\n",figicalMemory[i].data,LRU[i]);
+        printf("(%d),%c ",i,virtualMemory[i].data);
     }
     printf("\n");
 }
 
-void showHDD()
+void showPT()
 {
-    int i;
-    printf("disk data\n");
-    for(i=0;i<HDD_SIZE;i++){
-        printf("%c ",harddisk[i].data);
+    printf("\n");
+    int i=0;
+    printf("PageTable_number,(exist_bit,fMemory_number)\n");
+    for(i=0;i<vMemory_SIZE;i++){
+        printf("%d,(%d,%d)\n",
+        i,page_table[i].exist_bit,page_table[i].fMemory_number);
+    }
+    printf("\n");
+}
+
+void showFM()
+{
+    int i=0;
+    for(i=0;i<fMemory_SIZE;i++){
+        struct tm *time_st;
+        time_st = localtime(&figicalMemory[i].access_time.tv_sec);
+        printf("Data:%c(AccessTime:%d/%02d/%02d(%s) %02d:%02d:%02d.%06ld)\n",     // 現在時刻
+                figicalMemory[i].data,
+                time_st->tm_year+1900,     // year
+                time_st->tm_mon+1,         // month
+                time_st->tm_mday,          // day
+                weekName[time_st->tm_wday],// weekName
+                time_st->tm_hour,          // hour
+                time_st->tm_min,           // min
+                time_st->tm_sec,           // sec
+                figicalMemory[i].access_time.tv_usec            // micro sec
+                );
     }
     printf("\n");
 }
