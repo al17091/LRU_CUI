@@ -115,7 +115,7 @@ int getOld()
     gettimeofday(&t, NULL);
     for(i=0;i<fMemory_SIZE;i++){
         timersub(&t,&figicalMemory[i].access_time,&result);
-        if(result.tv_sec>0){
+        if(result.tv_sec>0 || (result.tv_sec==0&&result.tv_usec>0)){
             pull_number=i;
             t=figicalMemory[i].access_time;
         }
