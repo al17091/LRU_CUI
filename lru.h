@@ -22,6 +22,14 @@ typedef struct{
 extern char weekName[7][4];
 extern char Data[vMemory_SIZE];
 
+//記録用
+extern int PageOutFlag;
+extern int PageOutNum;
+extern int PageInFlag;
+extern int PageInNum;
+extern int PageFaultFlag;
+extern int FMchangeNum;
+
 Page virtualMemory[vMemory_SIZE];   //仮想メモリ
 Page figicalMemory[fMemory_SIZE];   //物理メモリ
 PageT page_table[vMemory_SIZE];        //ページテーブル

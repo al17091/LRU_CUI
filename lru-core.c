@@ -12,11 +12,24 @@ char weekName[7][4] = {
 
 char Data[vMemory_SIZE]={'A','B','C','D','E','F','G','H'};
 
+int PageOutFlag;
+int PageOutNum;
+int PageInFlag;
+int PageInNum;
+int PageFaultFlag;
+int FMchangeNum;
+
 void initialize()
 {
     int i=0;
     struct timeval now;
     gettimeofday(&now, NULL);
+    PageOutFlag=0;
+    PageOutNum=-1;
+    PageInFlag=0;
+    PageInNum=-1;
+    PageFaultFlag=0;
+    FMchangeNum=-1;
     for(i=0;i<fMemory_SIZE;i++){
         figicalMemory[i].access_time=now;
     }
@@ -59,9 +72,12 @@ int getvNum(char data)
 int pagefault(int pageNum)
 {
     if(page_table[pageNum].exist_bit==0){  //存在しない
-        printf("pagefalut\n");
+        PageFaultFlag=1;
         return 0;
     }else{          //存在する
+        PageFaultFlag=0;
+        PageInFlag=0;
+        PageOutFlag=0;
         return 1;
     }
 }
@@ -90,7 +106,6 @@ int getvMaddr(char data)
 
 int pageOut(int *vMNum)
 {
-    printf("pageOut\n");
     int i=0;
     for(i=0;i<fMemory_SIZE;i++){
         //もともと入っていたデータの仮想アドレス
@@ -125,7 +140,6 @@ int getOld()
 
 int pageIn(int fMNum,char data)
 {   
-    printf("pageIn\n");
     int i=0;
     struct timeval now;
     gettimeofday(&now, NULL);
@@ -133,10 +147,10 @@ int pageIn(int fMNum,char data)
     figicalMemory[fMNum].access_time=now;
     for(i=0;i<vMemory_SIZE;i++){
         if(virtualMemory[i].data==data){
-            return i;
+            break;
         }
     }
-    return -1;
+    return i;
 }
 
 void registTable(int outNum,int inNum,int fM_number)  
@@ -148,11 +162,20 @@ void registTable(int outNum,int inNum,int fM_number)
     if(outNum!=-1){
         page_table[outNum].exist_bit=0;
         page_table[outNum].fMemory_number=-1;
+        PageOutFlag=1;
+        PageOutNum=outNum;
+    }else{
+        PageOutFlag=0;
     }
     //ページインしたページはbit=1でページ番号記載
     if(inNum!=-1){
         page_table[inNum].exist_bit=1;
         page_table[inNum].fMemory_number=fM_number;
+        PageInFlag=1;
+        PageInNum=inNum;
+        FMchangeNum=fM_number;
+    }else{
+        PageInFlag=0;
     }
 }
 
@@ -161,6 +184,7 @@ void refresh_LRU(int vMNum)
     struct timeval now;
     gettimeofday(&now, NULL);
     figicalMemory[page_table[vMNum].fMemory_number].access_time=now;
+    FMchangeNum=page_table[vMNum].fMemory_number;
 }
 
 void showVM()
@@ -177,10 +201,20 @@ void showPT()
 {
     printf("\n");
     int i=0;
-    printf("PageTable_number,(exist_bit,fMemory_number)\n");
+    if(PageFaultFlag==1){
+        printf("pagefault\n\n");
+    }
+    printf("PageTable[N],vMemoryData,(exist_bit,fMemory_number)\n");
     for(i=0;i<vMemory_SIZE;i++){
-        printf("%d,(%d,%d)\n",
-        i,page_table[i].exist_bit,page_table[i].fMemory_number);
+        if(PageOutNum==i&&PageOutFlag==1){
+            printf("%d[%c],(%d,%2d) => PageOut\n",i,virtualMemory[i].data,page_table[i].exist_bit,page_table[i].fMemory_number);
+            continue;               
+        }
+        if(PageInNum==i&&PageInFlag==1){
+            printf("%d[%c],(%d,%2d) <= PageIn\n",i,virtualMemory[i].data,page_table[i].exist_bit,page_table[i].fMemory_number);  
+            continue;             
+        }
+        printf("%d[%c],(%d,%2d)\n",i,virtualMemory[i].data,page_table[i].exist_bit,page_table[i].fMemory_number);
     }
     printf("\n");
 }
@@ -191,17 +225,31 @@ void showFM()
     for(i=0;i<fMemory_SIZE;i++){
         struct tm *time_st;
         time_st = localtime(&figicalMemory[i].access_time.tv_sec);
-        printf("Data:%c(AccessTime:%d/%02d/%02d(%s) %02d:%02d:%02d.%06ld)\n",     // 現在時刻
-                figicalMemory[i].data,
-                time_st->tm_year+1900,     // year
-                time_st->tm_mon+1,         // month
-                time_st->tm_mday,          // day
-                weekName[time_st->tm_wday],// weekName
-                time_st->tm_hour,          // hour
-                time_st->tm_min,           // min
-                time_st->tm_sec,           // sec
-                figicalMemory[i].access_time.tv_usec            // micro sec
-                );
+        if(FMchangeNum==i){
+            printf("Data:%c(AccessTime:%d/%02d/%02d(%s) %02d:%02d:%02d.%06ld)　<changed>\n",     // 現在時刻
+                    figicalMemory[i].data,
+                    time_st->tm_year+1900,     // year
+                    time_st->tm_mon+1,         // month
+                    time_st->tm_mday,          // day
+                    weekName[time_st->tm_wday],// weekName
+                    time_st->tm_hour,          // hour
+                    time_st->tm_min,           // min
+                    time_st->tm_sec,           // sec
+                    figicalMemory[i].access_time.tv_usec            // micro sec
+                    );            
+        }else{
+            printf("Data:%c(AccessTime:%d/%02d/%02d(%s) %02d:%02d:%02d.%06ld)\n",     // 現在時刻
+                    figicalMemory[i].data,
+                    time_st->tm_year+1900,     // year
+                    time_st->tm_mon+1,         // month
+                    time_st->tm_mday,          // day
+                    weekName[time_st->tm_wday],// weekName
+                    time_st->tm_hour,          // hour
+                    time_st->tm_min,           // min
+                    time_st->tm_sec,           // sec
+                    figicalMemory[i].access_time.tv_usec            // micro sec
+                    );
+        }
     }
     printf("\n");
 }
