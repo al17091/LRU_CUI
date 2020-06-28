@@ -28,108 +28,43 @@ LRUアルゴリズムによって物理メモリ空間上のデータを入れ�
 virtualMemory  
 (0),A (1),B (2),C (3),D (4),E (5),F (6),G (7),H   
 ...  
-59 clock
-access F
-pagefalut
-pageOut
-pageIn
-
-PageTable_number,(exist_bit,fMemory_number)
-0,(1,0)
-1,(1,1)
-2,(0,-1)
-3,(0,-1)
-4,(1,3)
-5,(1,2)
-6,(0,-1)
-7,(0,-1)
-
-Data:A(AccessTime:2020/06/24(Wed) 21:20:06.995050)
-Data:B(AccessTime:2020/06/24(Wed) 21:20:07.033714)
-Data:F(AccessTime:2020/06/24(Wed) 21:20:07.060927)
-Data:E(AccessTime:2020/06/24(Wed) 21:20:06.936435)
-
-
-60 clock
-access F
-
-PageTable_number,(exist_bit,fMemory_number)
-0,(1,0)
-1,(1,1)
-2,(0,-1)
-3,(0,-1)
-4,(1,3)
-5,(1,2)
-6,(0,-1)
-7,(0,-1)
-
-Data:A(AccessTime:2020/06/24(Wed) 21:20:06.995050)
-Data:B(AccessTime:2020/06/24(Wed) 21:20:07.033714)
-Data:F(AccessTime:2020/06/24(Wed) 21:20:07.087704)
-Data:E(AccessTime:2020/06/24(Wed) 21:20:06.936435)
-
-
-61 clock
+106 clock
 access C
-pagefalut
-pageOut
-pageIn
 
-PageTable_number,(exist_bit,fMemory_number)
-0,(1,0)
-1,(1,1)
-2,(1,3)
-3,(0,-1)
-4,(0,-1)
-5,(1,2)
-6,(0,-1)
-7,(0,-1)
+PageTable[N],vMemoryData,(exist_bit,fMemory_number)
+0[A],(1, 1)
+1[B],(0,-1)
+2[C],(1, 3)
+3[D],(0,-1)
+4[E],(0,-1)
+5[F],(0,-1)
+6[G],(1, 2)
+7[H],(1, 0)
 
-Data:A(AccessTime:2020/06/24(Wed) 21:20:06.995050)
-Data:B(AccessTime:2020/06/24(Wed) 21:20:07.033714)
-Data:F(AccessTime:2020/06/24(Wed) 21:20:07.087704)
-Data:C(AccessTime:2020/06/24(Wed) 21:20:07.129966)
+Data:H(AccessTime:2020/06/28(Sun) 14:28:51.269402)
+Data:A(AccessTime:2020/06/28(Sun) 14:28:51.167739)
+Data:G(AccessTime:2020/06/28(Sun) 14:28:51.226666)
+Data:C(AccessTime:2020/06/28(Sun) 14:28:51.300962)　<changed>
 
 
-62 clock
-access F
+107 clock
+access D
 
-PageTable_number,(exist_bit,fMemory_number)
-0,(1,0)
-1,(1,1)
-2,(1,3)
-3,(0,-1)
-4,(0,-1)
-5,(1,2)
-6,(0,-1)
-7,(0,-1)
+pagefault
 
-Data:A(AccessTime:2020/06/24(Wed) 21:20:06.995050)
-Data:B(AccessTime:2020/06/24(Wed) 21:20:07.033714)
-Data:F(AccessTime:2020/06/24(Wed) 21:20:07.160299)
-Data:C(AccessTime:2020/06/24(Wed) 21:20:07.129966)
+PageTable[N],vMemoryData,(exist_bit,fMemory_number)
+0[A],(0,-1) => PageOut
+1[B],(0,-1)
+2[C],(1, 3)
+3[D],(1, 1) <= PageIn
+4[E],(0,-1)
+5[F],(0,-1)
+6[G],(1, 2)
+7[H],(1, 0)
 
-
-63 clock
-access H
-pagefalut
-pageOut
-pageIn
-
-PageTable_number,(exist_bit,fMemory_number)
-0,(0,-1)
-1,(1,1)
-2,(1,3)
-3,(0,-1)
-4,(0,-1)
-5,(1,2)
-6,(0,-1)
-7,(1,0)
-
-Data:H(AccessTime:2020/06/24(Wed) 21:20:07.187404)
-Data:B(AccessTime:2020/06/24(Wed) 21:20:07.033714)
-Data:F(AccessTime:2020/06/24(Wed) 21:20:07.160299)
-Data:C(AccessTime:2020/06/24(Wed) 21:20:07.129966)
-  
+Data:H(AccessTime:2020/06/28(Sun) 14:28:51.269402)
+Data:D(AccessTime:2020/06/28(Sun) 14:28:52.266763)　<changed>
+Data:G(AccessTime:2020/06/28(Sun) 14:28:51.226666)
+Data:C(AccessTime:2020/06/28(Sun) 14:28:51.300962)
 ...  
 ```
