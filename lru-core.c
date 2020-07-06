@@ -31,7 +31,7 @@ void initialize()
     PageFaultFlag=0;
     FMchangeNum=-1;
     for(i=0;i<fMemory_SIZE;i++){
-        figicalMemory[i].access_time=now;
+        physicalMemory[i].access_time=now;
     }
     for(i=0;i<vMemory_SIZE;i++){
         page_table[i].fMemory_number=-1;
@@ -85,7 +85,7 @@ int pagefault(int pageNum)
 int fMemorycheck(){    //空き領域を確認
     int i=0;
     for(i=0;i<fMemory_SIZE;i++){
-        if(figicalMemory[i].data=='\0'){ //空き領域
+        if(physicalMemory[i].data=='\0'){ //空き領域
             return i;
         }
     }
@@ -111,13 +111,13 @@ int pageOut(int *vMNum)
         //もともと入っていたデータの仮想アドレス
         int pull_number=getOld();   //最古のアクセスのアドレス
         if(i==pull_number){
-            *vMNum=getvMaddr(figicalMemory[i].data);
+            *vMNum=getvMaddr(physicalMemory[i].data);
             break;
         }
     }
-    figicalMemory[i].data='\0';
-    figicalMemory[i].access_time.tv_sec=0;
-    figicalMemory[i].access_time.tv_usec=0;
+    physicalMemory[i].data='\0';
+    physicalMemory[i].access_time.tv_sec=0;
+    physicalMemory[i].access_time.tv_usec=0;
     return i;
 }
 
@@ -129,10 +129,10 @@ int getOld()
     struct timeval result;
     gettimeofday(&t, NULL);
     for(i=0;i<fMemory_SIZE;i++){
-        timersub(&t,&figicalMemory[i].access_time,&result);
+        timersub(&t,&physicalMemory[i].access_time,&result);
         if(result.tv_sec>0 || (result.tv_sec==0&&result.tv_usec>0)){
             pull_number=i;
-            t=figicalMemory[i].access_time;
+            t=physicalMemory[i].access_time;
         }
     }
     return pull_number; 
@@ -143,8 +143,8 @@ int pageIn(int fMNum,char data)
     int i=0;
     struct timeval now;
     gettimeofday(&now, NULL);
-    figicalMemory[fMNum].data=data;
-    figicalMemory[fMNum].access_time=now;
+    physicalMemory[fMNum].data=data;
+    physicalMemory[fMNum].access_time=now;
     for(i=0;i<vMemory_SIZE;i++){
         if(virtualMemory[i].data==data){
             break;
@@ -183,7 +183,7 @@ void refresh_LRU(int vMNum)
 {
     struct timeval now;
     gettimeofday(&now, NULL);
-    figicalMemory[page_table[vMNum].fMemory_number].access_time=now;
+    physicalMemory[page_table[vMNum].fMemory_number].access_time=now;
     FMchangeNum=page_table[vMNum].fMemory_number;
 }
 
@@ -224,10 +224,10 @@ void showFM()
     int i=0;
     for(i=0;i<fMemory_SIZE;i++){
         struct tm *time_st;
-        time_st = localtime(&figicalMemory[i].access_time.tv_sec);
+        time_st = localtime(&physicalMemory[i].access_time.tv_sec);
         if(FMchangeNum==i){
             printf("Data:%c(AccessTime:%d/%02d/%02d(%s) %02d:%02d:%02d.%06ld)　<changed>\n",     // 現在時刻
-                    figicalMemory[i].data,
+                    physicalMemory[i].data,
                     time_st->tm_year+1900,     // year
                     time_st->tm_mon+1,         // month
                     time_st->tm_mday,          // day
@@ -235,11 +235,11 @@ void showFM()
                     time_st->tm_hour,          // hour
                     time_st->tm_min,           // min
                     time_st->tm_sec,           // sec
-                    figicalMemory[i].access_time.tv_usec            // micro sec
+                    physicalMemory[i].access_time.tv_usec            // micro sec
                     );            
         }else{
             printf("Data:%c(AccessTime:%d/%02d/%02d(%s) %02d:%02d:%02d.%06ld)\n",     // 現在時刻
-                    figicalMemory[i].data,
+                    physicalMemory[i].data,
                     time_st->tm_year+1900,     // year
                     time_st->tm_mon+1,         // month
                     time_st->tm_mday,          // day
@@ -247,7 +247,7 @@ void showFM()
                     time_st->tm_hour,          // hour
                     time_st->tm_min,           // min
                     time_st->tm_sec,           // sec
-                    figicalMemory[i].access_time.tv_usec            // micro sec
+                    physicalMemory[i].access_time.tv_usec            // micro sec
                     );
         }
     }

@@ -1,7 +1,7 @@
 # (1)コンパイラ
 CC  = gcc
 # (2)コンパイルオプション
-CFLAGS = -Wall -O2 -Werror -g3
+CFLAGS = -Wall -O2 -g3
 # (3)実行ファイル名
 TARGET  = bin/lru
 # (4)コンパイル対象のソースコード

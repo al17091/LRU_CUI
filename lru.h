@@ -31,7 +31,7 @@ extern int PageFaultFlag;
 extern int FMchangeNum;
 
 Page virtualMemory[vMemory_SIZE];   //仮想メモリ
-Page figicalMemory[fMemory_SIZE];   //物理メモリ
+Page physicalMemory[fMemory_SIZE];   //物理メモリ
 PageT page_table[vMemory_SIZE];        //ページテーブル
 
 void initialize();
