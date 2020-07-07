@@ -15,8 +15,8 @@ LRUアルゴリズムによって物理メモリ空間上のデータを入れ�
 1. makeが使える場合、binディレクトリが作成されbinに実行ファイルが出力されます。  
 ```make```
 2. makeが使えない場合  
-```gcc -g -O2 -Wall -Werror *.c -o lru```  
-```-g -O2 -Wall -Werror ```はなくてもいいです。
+```gcc -g -O2 -Wall *.c -o lru```  
+```-g -O2 -Wall ```はなくてもいいです。
 
 ## Run
 引数はありません。
